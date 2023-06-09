@@ -449,7 +449,7 @@
 					"-lc++",
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.BodyOft";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.bodyoft";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BodyOft.app/BodyOft";
 			};
@@ -473,7 +473,7 @@
 					"-lc++",
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.BodyOft";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.bodyoft";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BodyOft.app/BodyOft";
 			};
@@ -499,7 +499,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.BodyOft";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.bodyoft";
 				PRODUCT_NAME = "BodyOft";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -526,7 +526,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.BodyOft";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.bodyoft";
 				PRODUCT_NAME = "BodyOft";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
