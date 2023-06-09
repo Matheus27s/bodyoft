@@ -1,6 +1,5 @@
 import React, {useState, useEffect, SetStateAction} from 'react';
 import {windowHeight, windowWidth} from '../../utils/dimensions';
-import {useFocusEffect} from '@react-navigation/native';
 
 import SelectDropdown from 'react-native-select-dropdown';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -57,13 +56,13 @@ function Home({navigation}: IHome) {
     });
   }, []);
 
-  useFocusEffect(() => {
+  /*useFocusEffect(() => {
     handleListAll(day);
     let auxList = currentCardList as ICard[];
     if (auxList !== undefined) {
       console.log(!auxList.some(auxItem => auxItem.checked === false));
     }
-  });
+  });*/
 
   const handleCreate = () => {
     postCards();
