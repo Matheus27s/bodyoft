@@ -11,16 +11,17 @@ const Stack = createNativeStackNavigator();
 function App(): JSX.Element {
   return (
     <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{headerShown: false}}
-        initialRouteName="Splash">
-        <Stack.Screen name="Splash" component={Splash} />
-        <Stack.Screen
-          name="Home"
-          component={Home}
-          options={{gestureEnabled: false}}
-        />
-        <Stack.Screen name="Details" component={Details} />
+      <Stack.Navigator initialRouteName="Splash">
+        <Stack.Group
+          screenOptions={{
+            presentation: 'formSheet',
+            gestureEnabled: false,
+            headerShown: false,
+          }}>
+          <Stack.Screen name="Splash" component={Splash} />
+          <Stack.Screen name="Home" component={Home} />
+          <Stack.Screen name="Details" component={Details} />
+        </Stack.Group>
       </Stack.Navigator>
     </NavigationContainer>
   );

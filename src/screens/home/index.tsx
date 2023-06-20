@@ -1,5 +1,6 @@
-import React, {useState, useEffect, SetStateAction} from 'react';
+import React, {useState, useEffect, SetStateAction, useCallback} from 'react';
 import {windowHeight, windowWidth} from '../../utils/dimensions';
+import Lottie from 'lottie-react-native';
 
 import SelectDropdown from 'react-native-select-dropdown';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -22,6 +23,7 @@ import {
   Image,
   StatusBar,
   BackHandler,
+  TouchableOpacity,
 } from 'react-native';
 
 import {
@@ -34,6 +36,7 @@ import {
 
 import getRealm from '../../database/realm';
 import {MenuProvider} from 'react-native-popup-menu';
+import {useFocusEffect} from '@react-navigation/native';
 
 interface IHome {
   navigation: any;
@@ -42,13 +45,15 @@ interface IHome {
 function Home({navigation}: IHome) {
   const [day, setDay] = useState(days[0]);
   const [month, setMonth] = useState(months[0]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCongratulation, setIsCongratulation] = useState(false);
 
   const [currentCardList, setCurrentCardList] =
     useState<SetStateAction<ICard[] | undefined | never | Object>>();
 
-  useEffect(() => {
-    handleListAll(day);
-  }, [day]);
+  // Esconder o Congratulation
+  const handleHideCongratulation = (element: ICard) =>
+    element.checked === false;
 
   useEffect(() => {
     BackHandler.addEventListener('hardwareBackPress', () => {
@@ -56,13 +61,20 @@ function Home({navigation}: IHome) {
     });
   }, []);
 
-  /*useFocusEffect(() => {
-    handleListAll(day);
-    let auxList = currentCardList as ICard[];
-    if (auxList !== undefined) {
-      console.log(!auxList.some(auxItem => auxItem.checked === false));
-    }
-  });*/
+  useFocusEffect(
+    useCallback(() => {
+      handleListAll(day);
+    }, [day]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      const list = currentCardList as ICard[];
+      if (currentCardList !== undefined) {
+        setIsCongratulation(!list.some(handleHideCongratulation));
+      }
+    }, [currentCardList]),
+  );
 
   const handleCreate = () => {
     postCards();
@@ -71,138 +83,167 @@ function Home({navigation}: IHome) {
   const handleListAll = async (group: string) => {
     const realm = await getRealm();
     setCurrentCardList(
-      group === 'todos os dias'
+      group === 'todos'
         ? realm.objects<ICard>('Card')
         : realm.objects<ICard>('Card').filtered(`group=='${group}'`),
     );
   };
 
-  const handleCardsReset = async (group: string) => {
-    await putCardsResetDay(group);
-    handleListAll(group);
-  };
-
   return (
     <MenuProvider>
-      <SafeAreaView style={stylesHome.homeContainer}>
+      <SafeAreaView style={styles.homeContainer}>
         <StatusBar barStyle={'light-content'} backgroundColor={'#151515'} />
-        <>
-          <View style={stylesHome.header}>
-            <Text />
-            <SelectDropdown
-              buttonStyle={stylesHome.buttonSelect}
-              buttonTextStyle={stylesHome.textButton}
-              defaultButtonText={month}
-              data={months}
-              onSelect={selectedItem => {
-                setMonth(selectedItem);
-              }}
-              buttonTextAfterSelection={selectedItem => {
-                return selectedItem;
-              }}
-              rowTextForSelection={item => {
-                return item;
-              }}
-            />
-            <Menu>
-              <MenuTrigger
-                children={<Icon name="settings" size={30} color="#FFFFFF" />}
-              />
-              <MenuOptions>
-                <MenuOption
-                  style={stylesHome.menuOption}
-                  onSelect={() => handleCreate()}>
-                  <Icon style={stylesHome.menuIcon} size={16} name="refresh" />
-                  <Text>Sincronizar</Text>
-                </MenuOption>
-                <MenuOption
-                  style={stylesHome.menuOption}
-                  onSelect={() => removeAllCards()}>
-                  <Icon
-                    style={stylesHome.menuIcon}
-                    size={16}
-                    name="auto-delete"
-                  />
-                  <Text>Remover Todos</Text>
-                </MenuOption>
-                <MenuOption
-                  style={stylesHome.menuOption}
-                  onSelect={() => handleCardsReset(day)}>
-                  <Icon
-                    style={stylesHome.menuIcon}
-                    size={16}
-                    name="auto-delete"
-                  />
-                  <Text>Resetar Todos</Text>
-                </MenuOption>
-              </MenuOptions>
-            </Menu>
-          </View>
-          <FlatList
-            style={stylesHome.listContainer}
-            numColumns={3}
-            keyExtractor={item => item._id.toString()}
-            data={currentCardList as ICard[]}
-            renderItem={({item}) => {
-              return (
-                <View style={stylesCard.cardContainerSeparator}>
-                  <TouchableNativeFeedback
-                    onPress={() => {
-                      navigation.navigate('Details', {
-                        item,
-                      });
-                    }}>
-                    <View style={stylesCard.cardContainer}>
-                      <View style={stylesCard.header}>
-                        <Text style={stylesCard.textHeader}>
-                          {item.bodyRegion}
-                        </Text>
-                      </View>
-                      <Image
-                        source={{
-                          uri: item.imageUrl.toString(),
-                        }}
-                        style={stylesCard.cardImageContainer}
-                      />
-                      {item.checked && (
-                        <Image
-                          source={{
-                            uri: 'https://drive.google.com/uc?export=view&id=1PPUSaNu4imVc2ZenatONfmwmfhmp7sGx',
-                          }}
-                          style={stylesCard.cardImageCheck}
-                        />
-                      )}
-                      <Text>{item.descriptions[0].slice(0, 7) + '...'}</Text>
-                    </View>
-                  </TouchableNativeFeedback>
-                </View>
-              );
+        <View style={styles.header}>
+          <Text />
+          <SelectDropdown
+            buttonStyle={styles.buttonSelect}
+            buttonTextStyle={styles.textButton}
+            defaultButtonText={month}
+            data={months}
+            onSelect={selectedItem => {
+              setMonth(selectedItem);
+            }}
+            buttonTextAfterSelection={selectedItem => {
+              return selectedItem;
+            }}
+            rowTextForSelection={item => {
+              return item;
             }}
           />
-          <View style={stylesCard.footer}>
-            <SelectDropdown
-              buttonStyle={stylesHome.button}
-              buttonTextStyle={stylesHome.textButton}
-              defaultButtonText={day}
-              data={days}
-              onSelect={selectedItem => {
-                setDay(selectedItem);
-              }}
-              buttonTextAfterSelection={selectedItem => {
-                return selectedItem;
-              }}
-              rowTextForSelection={item => {
-                return item;
-              }}
+          <Menu>
+            <MenuTrigger
+              children={<Icon name="settings" size={30} color="#FFFFFF" />}
             />
-          </View>
+            <MenuOptions>
+              <MenuOption
+                style={styles.menuOption}
+                onSelect={() => {
+                  handleCreate();
+                  handleListAll(day);
+                }}>
+                <Icon style={styles.menuIcon} size={16} name="refresh" />
+                <Text>Sincronizar</Text>
+              </MenuOption>
+              <MenuOption
+                style={styles.menuOption}
+                onSelect={() => {
+                  removeAllCards();
+                  handleListAll(day);
+                }}>
+                <Icon style={styles.menuIcon} size={16} name="auto-delete" />
+                <Text>Remover Todos</Text>
+              </MenuOption>
+              <MenuOption
+                style={styles.menuOption}
+                onSelect={async () => {
+                  await putCardsResetDay(day);
+                  handleListAll(day);
+                }}>
+                <Icon style={styles.menuIcon} size={16} name="auto-delete" />
+                <Text>Resetar Todos</Text>
+              </MenuOption>
+            </MenuOptions>
+          </Menu>
+        </View>
+        <>
+          {isLoading ? (
+            <Lottie
+              source={require('../../assets/lottie/loading.json')}
+              autoPlay
+              loop={false}
+              onAnimationFinish={() => setIsLoading(false)}
+            />
+          ) : (
+            <>
+              <FlatList
+                numColumns={3}
+                style={stylesCard.listContainer}
+                data={currentCardList as ICard[]}
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={item => item._id.toString()}
+                renderItem={({item}) => {
+                  return (
+                    <View style={stylesCard.cardContainerSeparator}>
+                      <TouchableNativeFeedback
+                        onPress={() => {
+                          navigation.navigate('Details', {
+                            item,
+                          });
+                        }}>
+                        <View style={stylesCard.cardContainer}>
+                          <View style={stylesCard.header}>
+                            <Text style={stylesCard.textHeader}>
+                              {item.bodyRegion}
+                            </Text>
+                          </View>
+                          <Image
+                            source={{
+                              uri: item.imageUrl.toString(),
+                            }}
+                            style={stylesCard.cardImageContainer}
+                          />
+                          {item.checked && (
+                            <Image
+                              source={{
+                                uri: 'https://drive.google.com/uc?export=view&id=1PPUSaNu4imVc2ZenatONfmwmfhmp7sGx',
+                              }}
+                              style={stylesCard.cardImageCheck}
+                            />
+                          )}
+                          <Text>
+                            {item.descriptions[0].slice(0, 7) + '...'}
+                          </Text>
+                        </View>
+                      </TouchableNativeFeedback>
+                    </View>
+                  );
+                }}
+              />
+              {isCongratulation && (
+                <Lottie
+                  style={styles.congratulations}
+                  source={require('../../assets/lottie/congratulation.json')}
+                  autoPlay
+                  loop={false}
+                  onAnimationFinish={() => setIsCongratulation(false)}
+                />
+              )}
+              <View style={styles.footer}>
+                <FlatList
+                  data={days}
+                  horizontal={true}
+                  keyExtractor={item => item}
+                  showsHorizontalScrollIndicator={false}
+                  renderItem={({item}) => {
+                    if (item === day) {
+                      return (
+                        <TouchableOpacity
+                          onPress={() => setDay(item)}
+                          style={stylesDaySelected.buttonContainer}>
+                          <Text style={stylesDaySelected.text}>{item}</Text>
+                        </TouchableOpacity>
+                      );
+                    } else {
+                      return (
+                        <TouchableOpacity
+                          onPress={() => setDay(item)}
+                          style={stylesDay.buttonContainer}>
+                          <Text style={stylesDay.text}>{item}</Text>
+                        </TouchableOpacity>
+                      );
+                    }
+                  }}
+                />
+              </View>
+            </>
+          )}
         </>
       </SafeAreaView>
     </MenuProvider>
   );
 }
 
-const stylesHome = StyleSheet.create({
+const styles = StyleSheet.create({
   splash: {
     flex: 1,
     alignItems: 'center',
@@ -213,9 +254,6 @@ const stylesHome = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     flex: 1,
-    paddingBottom: 16,
-    width: windowWidth,
-    height: windowHeight,
     backgroundColor: '#FFFAEE',
   },
   header: {
@@ -225,9 +263,11 @@ const stylesHome = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#151515',
+    marginBottom: 10,
   },
-  listContainer: {
-    marginTop: 8,
+  congratulations: {
+    position: 'absolute',
+    marginVertical: 50,
   },
   button: {
     marginTop: 2,
@@ -252,8 +292,8 @@ const stylesHome = StyleSheet.create({
   footer: {
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: windowWidth - 32,
-    height: windowHeight - 560,
+    height: windowHeight - 720,
+    marginTop: 10,
   },
   menuOption: {
     flexDirection: 'row',
@@ -265,13 +305,15 @@ const stylesHome = StyleSheet.create({
 });
 
 const stylesCard = StyleSheet.create({
+  listContainer: {
+    marginHorizontal: 8,
+  },
   cardContainerSeparator: {
     height: 190,
-    width: 115,
+    width: 120,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 3,
-    marginVertical: 1,
+    marginHorizontal: 2,
   },
   cardContainer: {
     paddingBottom: 5,
@@ -302,10 +344,33 @@ const stylesCard = StyleSheet.create({
     width: 100,
     height: 100,
   },
-  footer: {
-    justifyContent: 'flex-end',
+});
+
+const stylesDay = StyleSheet.create({
+  buttonContainer: {
+    backgroundColor: 'rgba(255,0,0,0.1)',
+    marginHorizontal: 5,
+    borderRadius: 20,
+    width: 100,
+    height: 40,
     alignItems: 'center',
-    width: windowWidth - 32,
+    justifyContent: 'center',
+  },
+  text: {},
+});
+
+const stylesDaySelected = StyleSheet.create({
+  buttonContainer: {
+    backgroundColor: '#151515',
+    marginHorizontal: 5,
+    borderRadius: 20,
+    width: 100,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    color: '#FFFFFF',
   },
 });
 

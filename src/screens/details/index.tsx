@@ -35,19 +35,17 @@ function Details({route, navigation}: IDetails) {
   };
 
   return (
-    <SafeAreaView style={stylesHome.safeAreaContainer}>
+    <SafeAreaView style={styles.safeAreaContainer}>
       <StatusBar barStyle={'light-content'} backgroundColor={'#151515'} />
+      <View style={styles.header}>
+        <Text style={styles.textHeader}>{cardSelected.bodyRegion}</Text>
+      </View>
       <TouchableWithoutFeedback
         onPress={async () => {
           handleAnimation();
           handleUpdate(cardSelected);
         }}>
         <Animated.View style={[stylesDetailsCard.cardContainer, animatedStyle]}>
-          <View style={stylesDetailsCard.header}>
-            <Text style={stylesDetailsCard.textHeader}>
-              {cardSelected.bodyRegion}
-            </Text>
-          </View>
           <Image
             source={{
               uri: cardSelected.imageUrl.toString(),
@@ -65,7 +63,7 @@ function Details({route, navigation}: IDetails) {
           <View />
         </Animated.View>
       </TouchableWithoutFeedback>
-      <View style={stylesHome.footer}>
+      <View style={styles.footer}>
         <View style={stylesDetailsCard.descriptionsContainer}>
           {cardSelected.descriptions.map(description => (
             <View
@@ -95,8 +93,8 @@ function Details({route, navigation}: IDetails) {
         </View>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={stylesHome.button}>
-          <Text style={stylesHome.textButton}>
+          style={styles.button}>
+          <Text style={styles.textButton}>
             <Icon name="arrow-back-ios" size={28} color="#FFFFFF" />
           </Text>
         </TouchableOpacity>
@@ -105,7 +103,7 @@ function Details({route, navigation}: IDetails) {
   );
 }
 
-const stylesHome = StyleSheet.create({
+const styles = StyleSheet.create({
   safeAreaContainer: {
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -115,12 +113,23 @@ const stylesHome = StyleSheet.create({
     height: windowHeight,
     backgroundColor: '#FFFAEE',
   },
+  header: {
+    width: windowWidth,
+    height: windowHeight - 732,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#151515',
+  },
+  textHeader: {
+    fontSize: 18,
+    color: '#FFFFFF',
+  },
   button: {
     marginTop: 2,
     backgroundColor: '#151515',
     width: '100%',
     height: 48,
-    borderRadius: 5,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -140,11 +149,11 @@ const stylesHome = StyleSheet.create({
 const stylesDetailsCard = StyleSheet.create({
   cardContainer: {
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     borderColor: 'rgba(0,0,0,0.1)',
     backgroundColor: '#FFFFFF',
-    width: windowWidth - 32,
-    height: windowHeight - 256,
+    width: windowWidth - 28,
+    height: windowHeight - 286,
     borderRadius: 10,
     borderWidth: 1,
     marginTop: 16,
@@ -163,7 +172,7 @@ const stylesDetailsCard = StyleSheet.create({
   },
   cardImageContainer: {
     height: windowWidth,
-    width: windowHeight - 450,
+    width: windowHeight - 432,
   },
   cardImageCheck: {
     position: 'absolute',
@@ -176,6 +185,7 @@ const stylesDetailsCard = StyleSheet.create({
   },
   descriptionContainer: {
     flexDirection: 'row',
+    marginTop: 2,
   },
   descriptionText: {
     fontWeight: '500',
