@@ -7,10 +7,10 @@ function Splash({navigation}: any) {
     <View style={styles.splash}>
       <StatusBar barStyle={'light-content'} backgroundColor={'#151515'} />
       <Lottie
-        source={require('../../assets/lottie/oft.json')}
+        source={require('../../assets/lottie/animation3.json')}
         autoPlay
         loop={false}
-        onAnimationFinish={() => navigation.navigate('Home')}
+        onAnimationFinish={() => navigation.navigate('Login')}
       />
     </View>
   );

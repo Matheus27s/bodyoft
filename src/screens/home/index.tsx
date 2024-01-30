@@ -1,10 +1,14 @@
-import React, {useState, useEffect, SetStateAction, useCallback} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {windowHeight, windowWidth} from '../../utils/dimensions';
 import Lottie from 'lottie-react-native';
 
 import SelectDropdown from 'react-native-select-dropdown';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {ICard} from '../../database/interfaces/ICard';
+import {
+  IAssessment,
+  IExercise,
+  IStudent,
+} from '../../database/interfaces/ICard';
 
 import {
   Menu,
@@ -22,71 +26,67 @@ import {
   Text,
   Image,
   StatusBar,
-  BackHandler,
   TouchableOpacity,
 } from 'react-native';
 
-import {
-  postCards,
-  putCardsResetDay,
-  removeAllCards,
-  days,
-  months,
-} from '../../database/api';
-
-import getRealm from '../../database/realm';
 import {MenuProvider} from 'react-native-popup-menu';
 import {useFocusEffect} from '@react-navigation/native';
+import api from '../../services/api';
 
 interface IHome {
   navigation: any;
+  route: any;
 }
 
-function Home({navigation}: IHome) {
-  const [day, setDay] = useState(days[0]);
-  const [month, setMonth] = useState(months[0]);
+function Home({navigation, route}: IHome) {
+  const [student] = useState<IStudent>(route.params.student);
+  const [assessment] = useState<IAssessment>(route.params.assessment);
+
+  const [exercises, setExercises] = useState<IExercise[]>();
+  const [trainingDaySelected, setTrainingDaySelected] = useState('Todos');
+
   const [isLoading, setIsLoading] = useState(true);
-  const [isCongratulation, setIsCongratulation] = useState(false);
 
-  const [currentCardList, setCurrentCardList] =
-    useState<SetStateAction<ICard[] | undefined | never | Object>>();
-
-  // Esconder o Congratulation
-  const handleHideCongratulation = (element: ICard) =>
-    element.checked === false;
+  const months = ['01/2023', '02/2023', '03/2023', '04/2023'] as string[];
+  const [trainingDays] = useState(['01', '02', '03', 'Todos']);
 
   useEffect(() => {
-    BackHandler.addEventListener('hardwareBackPress', () => {
-      return true;
-    });
+    getAllExercisesByAssessment('Todos');
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      handleListAll(day);
-    }, [day]),
+      getAllExercisesByAssessment(trainingDaySelected);
+    }, [trainingDaySelected])
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      const list = currentCardList as ICard[];
-      if (currentCardList !== undefined) {
-        setIsCongratulation(!list.some(handleHideCongratulation));
-      }
-    }, [currentCardList]),
-  );
+  const getAllExercisesByAssessment = (trainingDay: string) => {
+    setIsLoading(true);
 
-  const handleCreate = () => {
-    postCards();
-  };
+    if (trainingDay === 'Todos') {
+      api
+        .get(`/assessments/${assessment.assessmentId}/exercises`)
+        .then(function (response) {
+          setExercises(response.data);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    } else {
+      api
+        .get(
+          `/assessments/${assessment.assessmentId}/exercises?trainingDay=${trainingDay}`,
+        )
+        .then(function (response) {
+          setExercises(response.data);
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    }
 
-  const handleListAll = async (group: string) => {
-    const realm = await getRealm();
-    setCurrentCardList(
-      group === 'todos'
-        ? realm.objects<ICard>('Card')
-        : realm.objects<ICard>('Card').filtered(`group=='${group}'`),
-    );
+    setTrainingDaySelected(trainingDay);
+    setIsLoading(false);
   };
 
   return (
@@ -98,10 +98,12 @@ function Home({navigation}: IHome) {
           <SelectDropdown
             buttonStyle={styles.buttonSelect}
             buttonTextStyle={styles.textButton}
-            defaultButtonText={month}
+            defaultButtonText={months[0]}
             data={months}
             onSelect={selectedItem => {
-              setMonth(selectedItem);
+              () => {
+                console.log(selectedItem);
+              };
             }}
             buttonTextAfterSelection={selectedItem => {
               return selectedItem;
@@ -117,30 +119,20 @@ function Home({navigation}: IHome) {
             <MenuOptions>
               <MenuOption
                 style={styles.menuOption}
-                onSelect={() => {
-                  handleCreate();
-                  handleListAll(day);
-                }}>
-                <Icon style={styles.menuIcon} size={16} name="refresh" />
-                <Text>Sincronizar</Text>
-              </MenuOption>
-              <MenuOption
-                style={styles.menuOption}
-                onSelect={() => {
-                  removeAllCards();
-                  handleListAll(day);
-                }}>
-                <Icon style={styles.menuIcon} size={16} name="auto-delete" />
-                <Text>Remover Todos</Text>
-              </MenuOption>
-              <MenuOption
-                style={styles.menuOption}
                 onSelect={async () => {
-                  await putCardsResetDay(day);
-                  handleListAll(day);
+                  navigation.navigate('Perfil', student);
                 }}>
-                <Icon style={styles.menuIcon} size={16} name="auto-delete" />
-                <Text>Resetar Todos</Text>
+                <Icon style={styles.menuIcon} size={24} name="person-pin" />
+                <Text style={styles.menuText}>Perfil</Text>
+              </MenuOption>
+
+              <MenuOption style={styles.menuOption} onSelect={() => {}}>
+                <Icon
+                  style={styles.menuIcon}
+                  size={24}
+                  name="power-settings-new"
+                />
+                <Text style={styles.menuText}>Sair</Text>
               </MenuOption>
             </MenuOptions>
           </Menu>
@@ -148,7 +140,8 @@ function Home({navigation}: IHome) {
         <>
           {isLoading ? (
             <Lottie
-              source={require('../../assets/lottie/loading.json')}
+              style={styles.lottie}
+              source={require('../../assets/lottie/animation3.json')}
               autoPlay
               loop={false}
               onAnimationFinish={() => setIsLoading(false)}
@@ -158,9 +151,9 @@ function Home({navigation}: IHome) {
               <FlatList
                 numColumns={3}
                 style={stylesCard.listContainer}
-                data={currentCardList as ICard[]}
+                data={exercises}
                 showsHorizontalScrollIndicator={false}
-                keyExtractor={item => item._id.toString()}
+                keyExtractor={item => item.exerciseId.toString()}
                 renderItem={({item}) => {
                   return (
                     <View style={stylesCard.cardContainerSeparator}>
@@ -182,24 +175,22 @@ function Home({navigation}: IHome) {
                             }}
                             style={stylesCard.cardImageContainer}
                           />
-                          {item.checked && (
+                          {item.hasDone && (
                             <Image
                               source={{
-                                uri: 'https://drive.google.com/uc?export=view&id=1PPUSaNu4imVc2ZenatONfmwmfhmp7sGx',
+                                uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Sign-check-icon.png/600px-Sign-check-icon.png?20200929115132',
                               }}
                               style={stylesCard.cardImageCheck}
                             />
                           )}
-                          <Text>
-                            {item.descriptions[0].slice(0, 7) + '...'}
-                          </Text>
+                          <Text>{item.descriptions}</Text>
                         </View>
                       </TouchableNativeFeedback>
                     </View>
                   );
                 }}
               />
-              {isCongratulation && (
+              {/* {isCongratulation && (
                 <Lottie
                   style={styles.congratulations}
                   source={require('../../assets/lottie/congratulation.json')}
@@ -207,32 +198,22 @@ function Home({navigation}: IHome) {
                   loop={false}
                   onAnimationFinish={() => setIsCongratulation(false)}
                 />
-              )}
+              )} */}
               <View style={styles.footer}>
                 <FlatList
-                  data={days}
+                  data={trainingDays}
                   horizontal={true}
                   keyExtractor={item => item}
                   showsHorizontalScrollIndicator={false}
-                  renderItem={({item}) => {
-                    if (item === day) {
-                      return (
-                        <TouchableOpacity
-                          onPress={() => setDay(item)}
-                          style={stylesDaySelected.buttonContainer}>
-                          <Text style={stylesDaySelected.text}>{item}</Text>
-                        </TouchableOpacity>
-                      );
-                    } else {
-                      return (
-                        <TouchableOpacity
-                          onPress={() => setDay(item)}
-                          style={stylesDay.buttonContainer}>
-                          <Text style={stylesDay.text}>{item}</Text>
-                        </TouchableOpacity>
-                      );
-                    }
-                  }}
+                  renderItem={({item}) => (
+                    <TouchableOpacity
+                      onPress={() => getAllExercisesByAssessment(item)}
+                      style={stylesDaySelected.buttonContainer}>
+                      <Text style={stylesDaySelected.text}>
+                        {item !== 'Todos' ? `Dia ${item}` : item}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 />
               </View>
             </>
@@ -244,6 +225,9 @@ function Home({navigation}: IHome) {
 }
 
 const styles = StyleSheet.create({
+  lottie: {
+    width: 150,
+  },
   splash: {
     flex: 1,
     alignItems: 'center',
@@ -294,6 +278,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: windowHeight - 720,
     marginTop: 10,
+    marginBottom: 10,
   },
   menuOption: {
     flexDirection: 'row',
@@ -302,6 +287,9 @@ const styles = StyleSheet.create({
   menuIcon: {
     marginRight: 2,
   },
+  menuText: {
+    fontSize: 16,
+  },
 });
 
 const stylesCard = StyleSheet.create({
@@ -309,20 +297,21 @@ const stylesCard = StyleSheet.create({
     marginHorizontal: 8,
   },
   cardContainerSeparator: {
-    height: 190,
-    width: 120,
+    height: 200,
+    width: 125,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 2,
+    marginHorizontal: 4,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
   },
   cardContainer: {
     paddingBottom: 5,
-    borderRadius: 5,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.1)',
-    backgroundColor: '#FFFFFF',
     width: '100%',
   },
   header: {
@@ -346,24 +335,11 @@ const stylesCard = StyleSheet.create({
   },
 });
 
-const stylesDay = StyleSheet.create({
-  buttonContainer: {
-    backgroundColor: 'rgba(255,0,0,0.1)',
-    marginHorizontal: 5,
-    borderRadius: 20,
-    width: 100,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  text: {},
-});
-
 const stylesDaySelected = StyleSheet.create({
   buttonContainer: {
     backgroundColor: '#151515',
     marginHorizontal: 5,
-    borderRadius: 20,
+    borderRadius: 10,
     width: 100,
     height: 40,
     alignItems: 'center',

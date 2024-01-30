@@ -17,6 +17,8 @@
     "@rneui/base": "^0.0.0-edge.2",
     "@rneui/themed": "^0.0.0-edge.2",
     "@types/react-native-flip-card": "^3.5.2",
+    "axios": "^1.4.0",
+    "date-fns": "^2.30.0",
     "lottie-react-native": "^5.1.6",
     "react": "18.2.0",
     "react-moment": "^1.1.3",

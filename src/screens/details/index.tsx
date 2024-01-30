@@ -14,9 +14,9 @@ import {
   View,
 } from 'react-native';
 
-import {ICard} from '../../database/interfaces/ICard';
-import {putCards} from '../../database/api';
+import {IExercise} from '../../database/interfaces/ICard';
 import {animatedStyle, handleAnimation} from './animation';
+import api from '../../services/api';
 
 interface IDetails {
   navigation: any;
@@ -25,37 +25,43 @@ interface IDetails {
 
 function Details({route, navigation}: IDetails) {
   const {item} = route.params;
-  const [cardSelected, setCardSelect] = useState<ICard>(item);
-  const [isCheck, setIsCheck] = useState<boolean>(cardSelected.checked);
+  const [exercise, setExercise] = useState<IExercise>(item);
 
-  const handleUpdate = (data: ICard) => {
-    putCards(data);
-    setCardSelect(data);
-    setTimeout(() => setIsCheck(data.checked), 500);
+  const updateExercise = (data: IExercise) => {
+    const assessmentId = 'add2a437-ee05-4c5b-a6ca-5ff50e4135bc';
+    data.hasDone = !data.hasDone;
+    api
+      .put(`/assessments/${assessmentId}/exercises/${data.exerciseId}`, data)
+      .then(function (response) {
+        setTimeout(() => setExercise(response.data), 500);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
   };
 
   return (
     <SafeAreaView style={styles.safeAreaContainer}>
       <StatusBar barStyle={'light-content'} backgroundColor={'#151515'} />
       <View style={styles.header}>
-        <Text style={styles.textHeader}>{cardSelected.bodyRegion}</Text>
+        <Text style={styles.textHeader}>{exercise.bodyRegion}</Text>
       </View>
       <TouchableWithoutFeedback
         onPress={async () => {
           handleAnimation();
-          handleUpdate(cardSelected);
+          updateExercise(exercise);
         }}>
         <Animated.View style={[stylesDetailsCard.cardContainer, animatedStyle]}>
           <Image
             source={{
-              uri: cardSelected.imageUrl.toString(),
+              uri: exercise.imageUrl.toString(),
             }}
             style={stylesDetailsCard.cardImageContainer}
           />
-          {isCheck && (
+          {exercise.hasDone && (
             <Image
               source={{
-                uri: 'https://drive.google.com/uc?export=view&id=1PPUSaNu4imVc2ZenatONfmwmfhmp7sGx',
+                uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Sign-check-icon.png/600px-Sign-check-icon.png?20200929115132',
               }}
               style={stylesDetailsCard.cardImageCheck}
             />
@@ -65,31 +71,10 @@ function Details({route, navigation}: IDetails) {
       </TouchableWithoutFeedback>
       <View style={styles.footer}>
         <View style={stylesDetailsCard.descriptionsContainer}>
-          {cardSelected.descriptions.map(description => (
-            <View
-              style={stylesDetailsCard.descriptionContainer}
-              key={description.toString()}>
-              <Text style={stylesDetailsCard.descriptionText}>
-                {description}
-              </Text>
-              {cardSelected.descriptions[
-                cardSelected.descriptions.length - 1
-              ] === description ? (
-                <Text style={stylesDetailsCard.descriptionPlus} />
-              ) : (
-                <Text style={stylesDetailsCard.descriptionPlus}> + </Text>
-              )}
-            </View>
-          ))}
+          <Text>{exercise.descriptions}</Text>
         </View>
         <View style={stylesDetailsCard.commentsContainer}>
-          {cardSelected.comments.map(comment => (
-            <Text
-              style={stylesDetailsCard.commentsText}
-              key={comment.toString()}>
-              {comment}
-            </Text>
-          ))}
+          <Text>{exercise.comments}</Text>
         </View>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -115,7 +100,7 @@ const styles = StyleSheet.create({
   },
   header: {
     width: windowWidth,
-    height: windowHeight - 732,
+    height: windowHeight - 712,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#151515',
@@ -142,7 +127,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     width: windowWidth - 32,
-    height: windowHeight - 560,
+    height: windowHeight - 590,
   },
 });
 
