@@ -1,30 +1,27 @@
 import React, {useEffect, useState} from 'react';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import SelectDropdown from 'react-native-select-dropdown';
 
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  FlatList,
   SafeAreaView,
+  Text,
+  FlatList,
+  Box,
+  VStack,
   Image,
-} from 'react-native';
-import {IAssessment, IStudent} from '../../database/interfaces/ICard';
+} from '@gluestack-ui/themed';
+
 import api from '../../services/api';
-import {windowHeight, windowWidth} from '../../utils/dimensions';
-import {dateMonthAndYear} from '../../utils/dateFormat';
+import {IStudent} from '../../interfaces';
+import PerimetryBox from './PerimetryBox';
 
 interface IPerfil {
   navigation: any;
   route: any;
 }
 
-function Perfil({route, navigation}: IPerfil) {
+function Perfil({route}: IPerfil) {
   const [student] = useState<IStudent>(route.params);
-  const [assessments, setAssessments] = useState<IAssessment[]>();
-  const [months, setMonths] = useState<string[]>([
+  const [assessments, setAssessments] = useState<IArguments[]>();
+  const [months] = useState<string[]>([
     '01/2023',
     '02/2023',
     '03/2023',
@@ -36,7 +33,6 @@ function Perfil({route, navigation}: IPerfil) {
       .get(`/students/${student.studentId}/assessments`)
       .then(function (response) {
         setAssessments(response.data);
-        console.log(response.data);
       })
       .catch(function (error) {
         console.log(error);
@@ -44,249 +40,126 @@ function Perfil({route, navigation}: IPerfil) {
   }, [student]);
 
   return (
-    <SafeAreaView style={styles.safeAreaContainer}>
-      <View style={styles.header}>
-        <Text style={styles.textHeader}>
-          {assessments !== undefined
-            ? `${dateMonthAndYear(
-                assessments[0].valuationDate,
-              )} a ${dateMonthAndYear(assessments[0].dueDate)}`
-            : null}
-        </Text>
-      </View>
-      <SelectDropdown
-        buttonStyle={styles.buttonSelect}
-        buttonTextStyle={styles.textButton}
-        defaultButtonText={months[0]}
-        data={months}
-        onSelect={selectedItem => {
-          () => {
-            console.log(selectedItem);
-          };
-        }}
-        buttonTextAfterSelection={selectedItem => {
-          return selectedItem;
-        }}
-        rowTextForSelection={item => {
-          return item;
-        }}
-      />
+    <SafeAreaView
+      bgColor="$violet700"
+      flex={1}
+      paddingVertical={12}
+      paddingHorizontal={12}>
+      <Box bg="red" alignItems="flex-start" justifyContent="space-between">
+        <Text>Nome: {student.name}</Text>
+        <Text>Profissão: {student.profession}</Text>
+        <Text>Idade: {student.age}</Text>
+      </Box>
       <FlatList
-        style={styles.listContainer}
-        numColumns={3}
         data={assessments}
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={assessment => assessment.assessmentId.toString()}
-        renderItem={({item}) => {
-          return (
-            <View style={styles.content}>
-              <View style={styles.session}>
-                <Text style={styles.title}>Info</Text>
-                <Text>Nome: {student.name}</Text>
-                <Text>Idade: {student.age}</Text>
-                <Text>Professor: {item?.teacher}</Text>
-              </View>
-              <View style={styles.session}>
-                <Text style={styles.title}>Perimetria</Text>
-                <Text>Estatura: {item.perimetry.stature}</Text>
-                <Text>Peso: {item.perimetry.fat}</Text>
-                <Text>Metabolismo Basal: {item.perimetry.basalMetabolism}</Text>
-                <Text>Idade Corporal: {item.perimetry.bodyAge}</Text>
-                <Text>Gordura ( % ): {item.perimetry.fatPercentage}</Text>
-                <Text>
-                  Massa Magra ( % ): {item.perimetry.leanMassPercentage}
-                </Text>
-                <Text>Massa Magra ( kg ): {item.perimetry.leanMass}</Text>
-                <Text>
-                  Gordura Viceral ( % ): {item.perimetry.visceralFatpercentage}
-                </Text>
-              </View>
-              <View style={styles.session}>
-                <Text style={styles.title}>Medidas</Text>
+        renderItem={({item}) => (
+          <Box>
+            <VStack bg="$violet900" borderRadius={5} padding={10}>
+              <Text>Perimetria</Text>
+              <Text>Estatura: {item.perimetry.stature}</Text>
+              <Text>Peso: {item.perimetry.fat}</Text>
+              <Text>Metabolismo Basal: {item.perimetry.basalMetabolism}</Text>
+              <Text>Idade Corporal: {item.perimetry.bodyAge}</Text>
+              <Text>Gordura ( % ): {item.perimetry.fatPercentage}</Text>
+              <Text>
+                Massa Magra ( % ): {item.perimetry.leanMassPercentage}
+              </Text>
+              <Text>Massa Magra ( kg ): {item.perimetry.leanMass}</Text>
+              <Text>
+                Gordura Viceral ( % ): {item.perimetry.visceralFatpercentage}
+              </Text>
+            </VStack>
+            <VStack>
+              <Text>Medidas</Text>
 
-                <View style={styles.perimetrySession}>
-                  <Text>Ombro: {item.perimetry.shoulder}</Text>
-                  <Image
-                    style={styles.perimetryIcon}
-                    source={require('../../assets/image/human.png')}
-                  />
-                </View>
+              <PerimetryBox description={`Ombro: ${item.perimetry.shoulder}`}>
+                <Image
+                  alt="image"
+                  source={require('../../assets/image/shoulder.png')}
+                />
+              </PerimetryBox>
 
-                <View style={styles.perimetrySession}>
-                  <Text>Peito: {item.perimetry.chest}</Text>
-                  <Image
-                    style={styles.perimetryIcon}
-                    source={require('../../assets/image/chest.png')}
-                  />
-                </View>
+              <PerimetryBox description={`Peito: ${item.perimetry.chest}`}>
+                <Image
+                  alt="image"
+                  source={require('../../assets/image/chest.png')}
+                />
+              </PerimetryBox>
 
-                <View style={styles.perimetrySession}>
-                  <Text>Abdômen: {item.perimetry.abdomen}</Text>
-                  <Image
-                    style={styles.perimetryIcon}
-                    source={require('../../assets/image/abs.png')}
-                  />
-                </View>
+              <PerimetryBox description={`Abdômen: ${item.perimetry.abdomen}`}>
+                <Image
+                  alt="image"
+                  source={require('../../assets/image/abdomen.png')}
+                />
+              </PerimetryBox>
 
-                <View style={styles.perimetrySession}>
-                  <Text>Cintura: {item.perimetry.waist}</Text>
-                  <Image
-                    style={styles.perimetryIcon}
-                    source={require('../../assets/image/diet.png')}
-                  />
-                </View>
+              <PerimetryBox description={`Cintura: ${item.perimetry.waist}`}>
+                <Image
+                  alt="image"
+                  source={require('../../assets/image/waist.png')}
+                />
+              </PerimetryBox>
 
-                <View style={styles.perimetrySession}>
-                  <Text>Quadril: {item.perimetry.hip}</Text>
-                  <Image
-                    style={styles.perimetryIcon}
-                    source={require('../../assets/image/hips.png')}
-                  />
-                </View>
+              <PerimetryBox description={`Quadril: ${item.perimetry.hip}`}>
+                <Image
+                  alt="image"
+                  source={require('../../assets/image/hip.png')}
+                />
+              </PerimetryBox>
 
-                <View style={styles.perimetrySession}>
-                  <Text>Braço Esquerda: {item.perimetry.leftArm}</Text>
-                  <Image
-                    style={styles.perimetryIcon}
-                    source={require('../../assets/image/muscles.png')}
-                  />
-                </View>
+              <PerimetryBox
+                description={`Braço Esquerda: ${item.perimetry.leftArm}`}>
+                <Image
+                  alt="image"
+                  source={require('../../assets/image/arm.png')}
+                />
+              </PerimetryBox>
 
-                <View style={styles.perimetrySession}>
-                  <Text>Braço Direito: {item.perimetry.rightArm}</Text>
-                  <Image
-                    style={styles.perimetryIcon}
-                    source={require('../../assets/image/muscles.png')}
-                  />
-                </View>
+              <PerimetryBox
+                description={`Braço Direito: ${item.perimetry.rightArm}`}>
+                <Image
+                  alt="image"
+                  source={require('../../assets/image/arm.png')}
+                />
+              </PerimetryBox>
 
-                <View style={styles.perimetrySession}>
-                  <Text>Coxa Direita: {item.perimetry.rightThigh}</Text>
-                  <Image
-                    style={styles.perimetryIcon}
-                    source={require('../../assets/image/leg.png')}
-                  />
-                </View>
+              <PerimetryBox
+                description={`Coxa Direita: ${item.perimetry.rightThigh}`}>
+                <Image
+                  alt="image"
+                  source={require('../../assets/image/thigh.png')}
+                />
+              </PerimetryBox>
 
-                <View style={styles.perimetrySession}>
-                  <Text>Coxa Esquerda: {item.perimetry.leftThigh}</Text>
-                  <Image
-                    style={styles.perimetryIcon}
-                    source={require('../../assets/image/leg.png')}
-                  />
-                </View>
+              <PerimetryBox
+                description={`Coxa Esquerda: ${item.perimetry.leftThigh}`}>
+                <Image
+                  alt="image"
+                  source={require('../../assets/image/thigh.png')}
+                />
+              </PerimetryBox>
 
-                <View style={styles.perimetrySession}>
-                  <Text>Panturrilha Direita: {item.perimetry.rightCalf}</Text>
-                  <Image
-                    style={styles.perimetryIcon}
-                    source={require('../../assets/image/calf.png')}
-                  />
-                </View>
+              <PerimetryBox
+                description={`Panturrilha Direita: ${item.perimetry.rightCalf}`}>
+                <Image
+                  alt="image"
+                  source={require('../../assets/image/calf.png')}
+                />
+              </PerimetryBox>
 
-                <View style={styles.perimetrySession}>
-                  <Text>Panturrilha Esquerda: {item.perimetry.leftCalf}</Text>
-                  <Image
-                    style={styles.perimetryIcon}
-                    source={require('../../assets/image/calf.png')}
-                  />
-                </View>
-              </View>
-            </View>
-          );
-        }}
+              <PerimetryBox
+                description={`Panturrilha Esquerda: ${item.perimetry.leftCalf}`}>
+                <Image
+                  alt="image"
+                  source={require('../../assets/image/calf.png')}
+                />
+              </PerimetryBox>
+            </VStack>
+          </Box>
+        )}
       />
-      <View style={styles.footer}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.button}>
-          <Text style={styles.textButton}>
-            <Icon name="arrow-back-ios" size={28} color="#FFFFFF" />
-          </Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeAreaContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 1,
-    paddingBottom: 16,
-    backgroundColor: '#FFFAEE',
-  },
-  listContainer: {
-    width: '100%',
-  },
-  header: {
-    width: windowWidth,
-    height: windowHeight - 712,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#151515',
-  },
-  textHeader: {
-    fontSize: 18,
-    color: '#FFFFFF',
-  },
-  buttonSelect: {
-    backgroundColor: '#151515',
-    marginRight: 32,
-    borderRadius: 5,
-    width: 120,
-  },
-  content: {
-    width: '100%',
-    paddingHorizontal: 12,
-  },
-  session: {
-    backgroundColor: 'rgba(100,100,100,0.1)',
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 12,
-    width: '100%',
-  },
-  perimetrySession: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.2)',
-    marginBottom: 10,
-    backgroundColor: '#FFFAEE',
-    paddingHorizontal: 10,
-    borderRadius: 5,
-  },
-  title: {
-    fontWeight: '700',
-    color: '#ff5b27',
-    marginBottom: 10,
-  },
-  perimetryIcon: {
-    width: 40,
-    height: 40,
-  },
-  button: {
-    marginTop: 2,
-    backgroundColor: '#151515',
-    width: '100%',
-    height: 48,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  textButton: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  footer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: windowWidth - 32,
-  },
-});
 
 export default Perfil;

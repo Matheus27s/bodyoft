@@ -1,4 +1,11 @@
-import Realm from 'realm';
+export interface IStudent {
+  studentId: string;
+  name: string;
+  age: number;
+  profession: string;
+  creationDate: string;
+  lastUpdateDate: string;
+}
 
 export interface ICard {
   _id: Number;
@@ -11,8 +18,6 @@ export interface ICard {
   dateCreated: string;
 }
 
-export type ICardObject = ICard & Realm.Object;
-
 export interface IExercise {
   exerciseId: string;
   imageUrl: string;
@@ -21,13 +26,6 @@ export interface IExercise {
   comments: string;
   hasDone: boolean;
   trainingDay: Number;
-}
-
-export interface IStudent {
-  studentId: string;
-  name: string;
-  age: number;
-  profession: string;
 }
 
 export interface IAssessment {

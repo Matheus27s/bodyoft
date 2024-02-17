@@ -1,109 +1,81 @@
-import React, {useEffect, useState} from 'react';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import Lottie from 'lottie-react-native';
+import React, {useState} from 'react';
 
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  BackHandler,
+  Avatar,
+  AvatarFallbackText,
+  Center,
+  EyeIcon,
+  EyeOffIcon,
+  FormControl,
+  Heading,
+  Input,
+  InputField,
+  InputIcon,
+  InputSlot,
   SafeAreaView,
-} from 'react-native';
-import {IAssessment, IStudent} from '../../database/interfaces/ICard';
-import api from '../../services/api';
+  VStack,
+} from '@gluestack-ui/themed';
+import TouchableOpacity from '../../components/TouchableOpacity';
 
-interface ILogin {
-  navigation: any;
-}
+function Login({navigation}: any) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-function Login({navigation}: ILogin) {
-  const studentId = '937a904a-7141-4e9b-abcb-93cd4fb13856';
-  const [student, setStudent] = useState<IStudent>();
+  const handleState = () => {
+    setShowPassword(!showPassword);
+  };
 
-  useEffect(() => {
-    api
-      .get(`students/${studentId}`)
-      .then(function (response) {
-        setStudent(response.data);
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
-
-    BackHandler.addEventListener('hardwareBackPress', () => {
-      return true;
-    });
-  }, []);
-
-  const handleNavigation = () => {
-    api
-      .get(`/students/${studentId}/assessments`)
-      .then(function (response) {
-        const homeObject = {
-          student,
-          assessment: response.data[0] as IAssessment,
-        };
-
-        navigation.navigate('Home', homeObject);
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
+  const handleSubmit = () => {
+    setIsLoading(!isLoading);
+    navigation.navigate('Home');
   };
 
   return (
-    <SafeAreaView style={styles.safeAreaContainer}>
-      <View style={styles.userContainer}>
-        <Lottie
-          source={require('../../assets/lottie/user.json')}
-          autoPlay
-          loop={false}
-          style={styles.icon}
-          onAnimationFinish={() => handleNavigation()}
-        />
-        <Text style={styles.text}>{student?.name}</Text>
-      </View>
+    <SafeAreaView bgColor="$violet700" flex={1}>
+      <FormControl size="md" flex={1}>
+        <Center flex={1} marginVertical={12} marginHorizontal={12}>
+          <Heading color="$white" size="2xl">
+            BodyOft
+          </Heading>
+          <VStack space="md" w="100%" alignItems="center">
+            <VStack alignItems="center" space="md" m={48}>
+              <Avatar bgColor="$violet900" size="md" borderRadius="$full">
+                <AvatarFallbackText>Matheus S. Santos</AvatarFallbackText>
+              </Avatar>
+              <Heading color="$white" size="md">
+                Matheus S. Santos
+              </Heading>
+            </VStack>
+            <Input
+              alignItems="center"
+              variant="outline"
+              size="md"
+              isDisabled={false}
+              isInvalid={false}
+              isReadOnly={false}
+              bg="$violet900">
+              <InputField
+                placeholder="Senha"
+                type={showPassword ? 'text' : 'password'}
+                color="$white"
+                placeholderTextColor="$white"
+              />
+              <InputSlot pr="$3" onPress={handleState}>
+                <InputIcon
+                  as={showPassword ? EyeIcon : EyeOffIcon}
+                  color="$$white"
+                />
+              </InputSlot>
+            </Input>
+            <TouchableOpacity
+              onPress={async () => handleSubmit()}
+              title={isLoading ? 'Please wait...' : 'Login'}
+            />
+          </VStack>
+        </Center>
+      </FormControl>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeAreaContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingBottom: 16,
-    backgroundColor: '#151515',
-    paddingHorizontal: 10,
-  },
-  userContainer: {
-    alignItems: 'center',
-    marginBottom: 54,
-  },
-  icon: {
-    width: 200,
-    height: 200,
-  },
-  button: {
-    marginTop: 2,
-    backgroundColor: '#ff5b27',
-    width: '100%',
-    height: 48,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  text: {
-    fontSize: 20,
-    color: '#ff5b27',
-    fontWeight: '600',
-  },
-  textButton: {
-    color: '#fcfcfd',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-});
 
 export default Login;
